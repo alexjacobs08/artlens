@@ -39,6 +39,13 @@ state: dict = {}
 async def lifespan(app: FastAPI):
     import open_clip
 
+    # Containers report the host's core count; without a cap torch oversubscribes
+    # threads against the cgroup CPU quota and inference slows to a crawl.
+    threads = int(os.environ.get("TORCH_THREADS", "4"))
+    torch.set_num_threads(threads)
+    torch.set_num_interop_threads(1)
+    log.info("torch threads=%d (host reports %s cpus)", threads, os.cpu_count())
+
     log.info("Loading model %s/%s ...", MODEL_NAME, PRETRAINED)
     model, _, preprocess = open_clip.create_model_and_transforms(
         MODEL_NAME, pretrained=PRETRAINED)
@@ -49,7 +56,11 @@ async def lifespan(app: FastAPI):
     assert embeddings.shape[0] == len(metadata), "index artifacts misaligned"
     state.update(model=model, preprocess=preprocess,
                  embeddings=embeddings, metadata=metadata)
-    log.info("Ready: %d artworks indexed", len(metadata))
+    import time
+    t0 = time.monotonic()
+    embed_image(Image.new("RGB", (224, 224)))  # warm up kernels/allocator
+    log.info("Ready: %d artworks indexed; warmup inference %.2fs",
+             len(metadata), time.monotonic() - t0)
     yield
     state.clear()
 

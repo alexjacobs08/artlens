@@ -1,0 +1,6 @@
+.venv/
+image_cache/
+build_8k.log
+tests/
+__pycache__/
+.pytest_cache/
