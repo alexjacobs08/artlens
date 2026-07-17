@@ -76,8 +76,10 @@ def main() -> None:
                         format="%(asctime)s %(levelname)s %(name)s %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
-    rows = [json.loads(l) for l in
-            (args.data_dir / "metadata.jsonl").read_text().splitlines() if l.strip()]
+    # Iterate the file (splits on \n only) — .splitlines() also splits on
+    # U+2028/NEL etc., which occur inside JSON strings in museum titles.
+    with open(args.data_dir / "metadata.jsonl", encoding="utf-8") as f:
+        rows = [json.loads(l) for l in f if l.strip()]
     if args.limit:
         rows = rows[: args.limit]
 
