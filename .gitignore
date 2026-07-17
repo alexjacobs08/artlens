@@ -7,3 +7,4 @@ node_modules/
 dist/
 nohup.out
 backend/data/
+*.log

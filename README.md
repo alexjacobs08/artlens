@@ -1,7 +1,8 @@
 # ArtLens — fine-art reverse-image search
 
-Upload any image and get back the most visually similar public-domain artworks
-from the Art Institute of Chicago's CC0 collection.
+Upload any image and get back the most visually similar public-domain (CC0)
+artworks from the open-access collections of the Art Institute of Chicago,
+the Cleveland Museum of Art, and The Metropolitan Museum of Art.
 
 - **Live app:** https://frontend-production-32e9.up.railway.app
 - **API:** https://backend-production-91b4.up.railway.app (`POST /search`, `GET /healthz`)
@@ -29,11 +30,19 @@ build_index.py (offline)                      Railway
   All embeddings are L2-normalized; similarity is cosine via inner product.
 - **Search:** exact brute-force matmul over a float32 matrix — sub-millisecond at
   ~8k vectors. Only consider an ANN index (FAISS/pgvector) beyond ~100k vectors.
-- **Corpus:** ~8,000 public-domain (CC0) works from the
-  [Art Institute of Chicago API](https://api.artic.edu/docs/). No API key needed.
-  Thumbnails are served straight from AIC's IIIF servers; we store no images.
+- **Corpus:** ~100k public-domain (CC0) works — the
+  [Art Institute of Chicago](https://api.artic.edu/docs/) (~61k),
+  the [Cleveland Museum of Art](https://openaccess-api.clevelandart.org/) (~41k),
+  and a curated slice of
+  [The Met](https://metmuseum.github.io/) (paintings-heavy departments).
+  None need an API key. Thumbnails are served straight from each museum's
+  CDN/IIIF servers; we store no images.
+- **Index artifacts** are published as assets on the `index` GitHub Release
+  (they outgrow git's 100 MB limit); the backend Docker build downloads them.
+  `backend/publish_index.sh` uploads fresh artifacts, bumps the cache-busting
+  `INDEX_VERSION` Railway variable, and redeploys.
 - **Ingest is pluggable:** `backend/ingest.py` defines a `Source` protocol —
-  add Met Open Access / Rijksmuseum / WikiArt by implementing `iter_records()`
+  add Rijksmuseum / Smithsonian / WikiArt by implementing `iter_records()`
   and registering in `SOURCES`.
 
 ## Local development
@@ -48,7 +57,8 @@ pip install -r requirements.txt
 
 # Build (or rebuild) the index — idempotent and resumable; images are cached
 # in image_cache/ and already-embedded ids are skipped on re-run.
-python build_index.py --n 8000        # ~1–2 h on a 4-core CPU box
+python build_index.py --n 8000        # quick single-source build (~1–2 h, 4-core CPU)
+python build_index.py --sources aic:61000,cma:41474,met:20000  # full corpus (~15–18 h)
 
 # Run the API
 uvicorn app:app --port 8000           # FRONTEND_ORIGIN=... to set CORS origin
