@@ -33,14 +33,14 @@ export function Hero({ onSelect }: HeroProps) {
         <div className="space-y-6 animate-fade-up">
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            Reverse image search · Open-access art
+            Visual discovery · Open-access art
           </span>
           <h1 className="font-display text-5xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
             Art<span className="text-gradient">Lens</span>
           </h1>
           <p className="mx-auto max-w-md text-balance text-base leading-relaxed text-muted-foreground">
-            Upload a photo of a painting, print, or object and find its
-            kindred works among{" "}
+            Drop in any image — a painting you photographed, a sketch, a
+            snapshot — and surface its kindred works among{" "}
             <span className="text-foreground">{corpus}</span> from the
             open-access collections of great museums.
           </p>

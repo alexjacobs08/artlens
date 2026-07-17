@@ -42,12 +42,12 @@ export function HowItWorks() {
         How it works
       </p>
       <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-        Reverse image search, from pixels to paintings
+        From your image to its kindred works
       </h1>
       <p className="mt-4 max-w-xl leading-relaxed text-muted-foreground">
-        ArtLens finds visually similar artworks the same way modern AI search
-        works everywhere: by turning images into vectors and measuring
-        distances between them.
+        Every image carries echoes of the art that came before it. ArtLens
+        finds them by turning images into vectors and measuring the distance
+        between your picture and a century-spanning museum collection.
       </p>
 
       <div className="mt-12 space-y-6">
