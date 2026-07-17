@@ -18,23 +18,42 @@ RUN python -c "import torch; torch.hub.load('facebookresearch/dinov2', 'dinov2_v
 COPY app.py ingest.py ./
 
 # Index artifacts are published as GitHub Release assets (too large for git at
-# ~100k works). INDEX_VERSION only busts the layer cache — bump it (Railway
-# service variable) whenever the release assets are updated.
-ARG INDEX_BASE_URL=https://github.com/alexjacobs08/artlens/releases/download/index
+# ~100k works). The repo is private, so assets are fetched via the GitHub API
+# with GH_TOKEN (Railway service variable, surfaced as a build arg).
+# INDEX_VERSION only busts the layer cache — bump it whenever the release
+# assets are updated.
 ARG INDEX_VERSION=dev
-RUN echo "index version: ${INDEX_VERSION}" && python - <<EOF
-import os, urllib.request, urllib.error
-base = "${INDEX_BASE_URL}"
+ARG GH_TOKEN
+RUN echo "index version: ${INDEX_VERSION}" && GH_TOKEN="${GH_TOKEN}" python - <<'EOF'
+import os
+import httpx
+
+repo = "alexjacobs08/artlens"
+auth = {"Authorization": f"Bearer {os.environ['GH_TOKEN']}"}
+rel = httpx.get(f"https://api.github.com/repos/{repo}/releases/tags/index",
+                headers={**auth, "Accept": "application/vnd.github+json"},
+                timeout=30)
+rel.raise_for_status()
+assets = {a["name"]: a["id"] for a in rel.json()["assets"]}
 os.makedirs("data", exist_ok=True)
 for name, required in (("embeddings.npy", True), ("metadata.jsonl", True),
                        ("embeddings_dino.npy", False)):
-    print("fetching", name)
-    try:
-        urllib.request.urlretrieve(f"{base}/{name}", f"data/{name}")
-    except urllib.error.HTTPError:
+    if name not in assets:
         if required:
-            raise
+            raise SystemExit(f"required asset {name} missing from release")
         print(name, "not in release yet — blended search disabled")
+        continue
+    print("fetching", name)
+    # httpx drops the Authorization header on the cross-host redirect to
+    # storage, which is exactly what GitHub's asset endpoint requires.
+    with httpx.stream("GET",
+                      f"https://api.github.com/repos/{repo}/releases/assets/{assets[name]}",
+                      headers={**auth, "Accept": "application/octet-stream"},
+                      follow_redirects=True, timeout=120) as r:
+        r.raise_for_status()
+        with open(f"data/{name}", "wb") as f:
+            for chunk in r.iter_bytes(1 << 20):
+                f.write(chunk)
 EOF
 
 # Railway injects PORT.
