@@ -8,6 +8,7 @@ import { ResultsGrid, SkeletonGrid } from "@/components/ResultsGrid"
 import { ErrorState } from "@/components/ErrorState"
 import { EmptyResults } from "@/components/EmptyResults"
 import { BlendSlider } from "@/components/BlendSlider"
+import { HowItWorks } from "@/components/HowItWorks"
 import { fetchHealth, searchByImage, SearchError } from "@/lib/api"
 import type { SearchResult } from "@/lib/api"
 
@@ -21,6 +22,16 @@ function App() {
   const [errorMessage, setErrorMessage] = useState("")
   const [alpha, setAlpha] = useState(0.5)
   const [blendAvailable, setBlendAvailable] = useState(false)
+  const [hash, setHash] = useState(window.location.hash)
+
+  useEffect(() => {
+    const onHashChange = () => {
+      setHash(window.location.hash)
+      window.scrollTo(0, 0)
+    }
+    window.addEventListener("hashchange", onHashChange)
+    return () => window.removeEventListener("hashchange", onHashChange)
+  }, [])
   const abortRef = useRef<AbortController | null>(null)
   const alphaRef = useRef(alpha)
   alphaRef.current = alpha
@@ -112,7 +123,9 @@ function App() {
       <Header />
 
       <main className="flex-1">
-        {!file || !previewUrl ? (
+        {hash === "#how-it-works" ? (
+          <HowItWorks />
+        ) : !file || !previewUrl ? (
           <Hero onSelect={handleSelect} />
         ) : (
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 sm:px-10">
