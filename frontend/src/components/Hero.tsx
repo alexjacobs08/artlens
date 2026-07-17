@@ -17,8 +17,8 @@ export function Hero({ onSelect }: HeroProps) {
         <p className="mx-auto max-w-md text-balance text-base leading-relaxed text-muted">
           Photograph a painting, print, or object and find its kindred works
           among {" "}
-          <span className="text-bone">100,000+ public-domain pieces</span>{" "}
-          in the Art Institute of Chicago's collection.
+          <span className="text-bone">8,000 public-domain works</span>{" "}
+          from the Art Institute of Chicago's collection.
         </p>
       </div>
 
