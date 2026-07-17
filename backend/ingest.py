@@ -30,6 +30,11 @@ class ArtworkRecord:
     image_url: str     # full-size-ish image used for embedding
     thumbnail_url: str
     page_url: str
+    cache_key: str = ""  # filename stem for the on-disk image cache
+
+    def __post_init__(self):
+        if not self.cache_key:
+            self.cache_key = self.id.replace(":", "_")
 
 
 class Source(Protocol):
@@ -114,9 +119,121 @@ class ArticSource:
                     image_url=f"{self.iiif_url}/{image_id}/full/{self.INDEX_WIDTH},/0/default.jpg",
                     thumbnail_url=f"{self.iiif_url}/{image_id}/full/{self.THUMB_WIDTH},/0/default.jpg",
                     page_url=f"https://www.artic.edu/artworks/{row['id']}",
+                    cache_key=image_id,  # keeps pre-multisource caches valid
                 )
                 yielded += 1
             page += 1
 
 
-SOURCES: dict[str, type] = {"aic": ArticSource}
+class ClevelandSource:
+    """Cleveland Museum of Art Open Access API (CC0 filterable, no key).
+
+    https://openaccess-api.clevelandart.org/ — ~41k CC0 works with images.
+    `images.web` (~750px JPEG) is used for both embedding and thumbnails.
+    """
+
+    name = "cma"
+    BASE = "https://openaccess-api.clevelandart.org/api/artworks/"
+
+    def __init__(self, client: httpx.Client | None = None):
+        self.client = client or httpx.Client(
+            headers={"User-Agent": USER_AGENT}, timeout=30.0
+        )
+
+    def iter_records(self, limit: int) -> Iterator[ArtworkRecord]:
+        skip, yielded = 0, 0
+        while yielded < limit:
+            resp = _get_with_retry(
+                self.client, self.BASE,
+                params={"cc0": "1", "has_image": "1", "limit": 100, "skip": skip},
+            )
+            data = resp.json().get("data", [])
+            if not data:
+                return
+            for row in data:
+                if yielded >= limit:
+                    return
+                web = (row.get("images") or {}).get("web") or {}
+                if not web.get("url"):
+                    continue
+                creators = row.get("creators") or []
+                artist = (creators[0].get("description") or "Unknown artist"
+                          if creators else "Unknown artist")
+                yield ArtworkRecord(
+                    id=f"cma:{row['id']}",
+                    title=row.get("title") or "Untitled",
+                    artist=artist,
+                    date=row.get("creation_date") or "",
+                    image_id=str(row["id"]),
+                    source="Cleveland Museum of Art",
+                    image_url=web["url"],
+                    thumbnail_url=web["url"],
+                    page_url=row.get("url") or f"https://clevelandart.org/art/{row['id']}",
+                )
+                yielded += 1
+            skip += 100
+
+
+class MetSource:
+    """Metropolitan Museum of Art Collection API (no key).
+
+    No public-domain filter on the search endpoint, so we walk curated
+    departments (paintings-heavy first), fetch each object, and keep
+    isPublicDomain works with a primaryImageSmall. Per-object requests are
+    throttled by the shared concurrency cap; the Met asks clients to stay
+    well under 80 req/s.
+    """
+
+    name = "met"
+    SEARCH = "https://collectionapi.metmuseum.org/public/collection/v1/search"
+    OBJECT = "https://collectionapi.metmuseum.org/public/collection/v1/objects/{id}"
+    # Department ids, most painting/print-rich first.
+    DEPARTMENTS = [11, 1, 15, 6, 21, 14, 9, 19, 13, 10, 17, 12]
+
+    def __init__(self, client: httpx.Client | None = None):
+        self.client = client or httpx.Client(
+            headers={"User-Agent": USER_AGENT}, timeout=30.0
+        )
+
+    def iter_records(self, limit: int) -> Iterator[ArtworkRecord]:
+        yielded = 0
+        seen: set[int] = set()
+        for dept in self.DEPARTMENTS:
+            if yielded >= limit:
+                return
+            resp = _get_with_retry(
+                self.client, self.SEARCH,
+                params={"hasImages": "true", "departmentId": dept, "q": "*"},
+            )
+            ids = resp.json().get("objectIDs") or []
+            log.info("Met dept %s: %d candidate objects", dept, len(ids))
+            for oid in ids:
+                if yielded >= limit:
+                    return
+                if oid in seen:
+                    continue
+                seen.add(oid)
+                try:
+                    obj = _get_with_retry(self.client, self.OBJECT.format(id=oid)).json()
+                except Exception as e:
+                    log.warning("Met object %s failed: %s", oid, e)
+                    continue
+                img = obj.get("primaryImageSmall")
+                if not obj.get("isPublicDomain") or not img:
+                    continue
+                yield ArtworkRecord(
+                    id=f"met:{oid}",
+                    title=obj.get("title") or "Untitled",
+                    artist=obj.get("artistDisplayName") or "Unknown artist",
+                    date=obj.get("objectDate") or "",
+                    image_id=str(oid),
+                    source="The Metropolitan Museum of Art",
+                    image_url=img,
+                    thumbnail_url=img,
+                    page_url=obj.get("objectURL")
+                    or f"https://www.metmuseum.org/art/collection/search/{oid}",
+                )
+                yielded += 1
+
+
+SOURCES: dict[str, type] = {"aic": ArticSource, "cma": ClevelandSource, "met": MetSource}

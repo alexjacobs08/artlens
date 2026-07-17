@@ -114,6 +114,7 @@ async def search(file: UploadFile = File(...), k: int = Form(8)):
             "date": state["metadata"][i]["date"],
             "page_url": state["metadata"][i]["page_url"],
             "thumbnail_url": state["metadata"][i]["thumbnail_url"],
+            "source": state["metadata"][i].get("source", ""),
         }
         for i in top
     ]}

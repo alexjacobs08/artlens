@@ -5,6 +5,18 @@ export interface SearchResult {
   date: string
   page_url: string
   thumbnail_url: string
+  source?: string
+}
+
+export async function fetchIndexedCount(): Promise<number | null> {
+  try {
+    const r = await fetch(`${API_URL}/healthz`)
+    if (!r.ok) return null
+    const body = (await r.json()) as { indexed?: number }
+    return typeof body.indexed === "number" ? body.indexed : null
+  } catch {
+    return null
+  }
 }
 
 interface SearchResponse {

@@ -75,6 +75,11 @@ export function ResultCard({ result, index }: ResultCardProps) {
             </p>
           )}
         </div>
+        {result.source && (
+          <p className="truncate pt-0.5 font-mono text-[10px] uppercase tracking-wide text-muted-2">
+            {result.source}
+          </p>
+        )}
       </div>
     </a>
   )

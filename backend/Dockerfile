@@ -15,7 +15,20 @@ ENV CLIP_MODEL=${CLIP_MODEL} CLIP_PRETRAINED=${CLIP_PRETRAINED}
 RUN python -c "import open_clip, os; open_clip.create_model_and_transforms(os.environ['CLIP_MODEL'], pretrained=os.environ['CLIP_PRETRAINED'])"
 
 COPY app.py ingest.py ./
-COPY data/ data/
+
+# Index artifacts are published as GitHub Release assets (too large for git at
+# ~100k works). INDEX_VERSION only busts the layer cache — bump it (Railway
+# service variable) whenever the release assets are updated.
+ARG INDEX_BASE_URL=https://github.com/alexjacobs08/artlens/releases/download/index
+ARG INDEX_VERSION=dev
+RUN echo "index version: ${INDEX_VERSION}" && python - <<EOF
+import os, urllib.request
+base = "${INDEX_BASE_URL}"
+os.makedirs("data", exist_ok=True)
+for name in ("embeddings.npy", "metadata.jsonl"):
+    print("fetching", name)
+    urllib.request.urlretrieve(f"{base}/{name}", f"data/{name}")
+EOF
 
 # Railway injects PORT.
 CMD uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}
