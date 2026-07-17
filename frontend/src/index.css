@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@import "@fontsource/fraunces/400.css";
+@import "@fontsource/fraunces/500-italic.css";
+@import "@fontsource/fraunces/600.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+@theme {
+  /* Curatorial palette: darkened gallery wall, brass label accents */
+  --color-ink: #14120f;
+  --color-ink-raised: #1c1913;
+  --color-paper: #201c17;
+  --color-paper-hover: #292319;
+  --color-rule: #524a3a;
+  --color-bone: #ede7da;
+  --color-muted: #a89f8e;
+  --color-muted-2: #766c5c;
+  --color-brass: #c9a24b;
+  --color-brass-dim: #8f7431;
+  --color-brass-bright: #e0bc6c;
+  --color-verdigris: #5c8a76;
+  --color-crimson: #a34638;
+
+  --font-display: "Fraunces", "Iowan Old Style", "Georgia", serif;
+  --font-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+
+  --animate-fade-up: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in: fade-in 0.4s ease-out both;
+  --animate-scan: scan 2.2s ease-in-out infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes scan {
+    0%,
+    100% {
+      transform: translateY(-2%);
+      opacity: 0.35;
+    }
+    50% {
+      transform: translateY(102%);
+      opacity: 0.85;
+    }
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-rule);
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-bone);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    margin: 0;
+  }
+  ::selection {
+    background: var(--color-brass);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

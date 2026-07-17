@@ -1,0 +1,10 @@
+torch==2.13.0
+torchvision==0.28.0
+open_clip_torch==3.3.0
+fastapi==0.139.2
+uvicorn[standard]==0.51.0
+pillow==12.2.0
+numpy==2.4.4
+python-multipart==0.0.32
+httpx==0.28.1
+tqdm

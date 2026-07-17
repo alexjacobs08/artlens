@@ -1,0 +1,8 @@
+backend/.venv/
+backend/image_cache/
+backend/build_8k.log
+__pycache__/
+.pytest_cache/
+node_modules/
+dist/
+nohup.out
