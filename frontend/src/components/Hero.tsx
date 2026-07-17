@@ -24,9 +24,8 @@ export function Hero({ onSelect }: HeroProps) {
       : "thousands of public-domain works"
   return (
     <div className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid" aria-hidden />
       <div
-        className="pointer-events-none absolute left-1/2 top-[-8rem] h-[26rem] w-[42rem] -translate-x-1/2 rounded-full bg-accent/25 blur-[110px] animate-glow-pulse"
+        className="pointer-events-none absolute left-1/2 top-[-10rem] h-[24rem] w-[40rem] -translate-x-1/2 rounded-full bg-foreground/[0.04] blur-[110px]"
         aria-hidden
       />
 
