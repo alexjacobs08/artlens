@@ -8,15 +8,27 @@ export interface SearchResult {
   source?: string
 }
 
-export async function fetchIndexedCount(): Promise<number | null> {
+export interface Health {
+  indexed: number | null
+  blend: boolean
+}
+
+export async function fetchHealth(): Promise<Health> {
   try {
     const r = await fetch(`${API_URL}/healthz`)
-    if (!r.ok) return null
-    const body = (await r.json()) as { indexed?: number }
-    return typeof body.indexed === "number" ? body.indexed : null
+    if (!r.ok) return { indexed: null, blend: false }
+    const body = (await r.json()) as { indexed?: number; blend?: boolean }
+    return {
+      indexed: typeof body.indexed === "number" ? body.indexed : null,
+      blend: body.blend === true,
+    }
   } catch {
-    return null
+    return { indexed: null, blend: false }
   }
+}
+
+export async function fetchIndexedCount(): Promise<number | null> {
+  return (await fetchHealth()).indexed
 }
 
 interface SearchResponse {
@@ -35,10 +47,12 @@ export async function searchByImage(
   file: File,
   k = 8,
   signal?: AbortSignal,
+  alpha = 0.5,
 ): Promise<SearchResult[]> {
   const form = new FormData()
   form.append("file", file)
   form.append("k", String(k))
+  form.append("alpha", String(alpha))
 
   let response: Response
   try {

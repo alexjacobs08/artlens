@@ -52,7 +52,8 @@ def test_self_match_top1(client):
     assert len(results) == 3
     assert results[0]["title"] == "Work 3"
     assert results[0]["score"] > 0.99
-    assert set(results[0]) == {"score", "title", "artist", "date", "page_url", "thumbnail_url"}
+    assert set(results[0]) == {"score", "title", "artist", "date", "page_url",
+                               "thumbnail_url", "source"}
 
 
 def test_rejects_bad_type(client):

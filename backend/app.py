@@ -54,8 +54,25 @@ async def lifespan(app: FastAPI):
     metadata = [json.loads(l) for l in
                 (DATA_DIR / "metadata.jsonl").read_text().splitlines() if l.strip()]
     assert embeddings.shape[0] == len(metadata), "index artifacts misaligned"
+
+    # Optional second score space: DINOv2 (visual/structural similarity),
+    # blended with CLIP (semantic) at query time via the `alpha` param.
+    dino_path = DATA_DIR / "embeddings_dino.npy"
+    dino_embeddings = dino_model = None
+    if dino_path.exists():
+        candidate = np.load(dino_path)
+        if candidate.shape[0] == embeddings.shape[0]:
+            dino_embeddings = candidate
+            log.info("Loading DINOv2 ViT-B/14 for blended search")
+            dino_model = torch.hub.load("facebookresearch/dinov2", "dinov2_vitb14")
+            dino_model.eval()
+        else:
+            log.warning("embeddings_dino.npy has %d rows vs %d — ignoring",
+                        candidate.shape[0], embeddings.shape[0])
+
     state.update(model=model, preprocess=preprocess,
-                 embeddings=embeddings, metadata=metadata)
+                 embeddings=embeddings, metadata=metadata,
+                 dino_model=dino_model, dino_embeddings=dino_embeddings)
     import time
     t0 = time.monotonic()
     embed_image(Image.new("RGB", (224, 224)))  # warm up kernels/allocator
@@ -79,7 +96,8 @@ app.add_middleware(
 
 @app.get("/healthz")
 def healthz():
-    return {"ok": True, "indexed": len(state.get("metadata", []))}
+    return {"ok": True, "indexed": len(state.get("metadata", [])),
+            "blend": state.get("dino_embeddings") is not None}
 
 
 def embed_image(img: Image.Image) -> np.ndarray:
@@ -90,8 +108,29 @@ def embed_image(img: Image.Image) -> np.ndarray:
     return feat[0].cpu().numpy().astype(np.float32)
 
 
+DINO_TRANSFORM = None
+
+
+def embed_image_dino(img: Image.Image) -> np.ndarray:
+    global DINO_TRANSFORM
+    if DINO_TRANSFORM is None:
+        from torchvision import transforms
+        DINO_TRANSFORM = transforms.Compose([
+            transforms.Resize(256, interpolation=transforms.InterpolationMode.BICUBIC),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ])
+    tensor = DINO_TRANSFORM(img).unsqueeze(0)
+    with torch.no_grad():
+        feat = state["dino_model"](tensor)
+        feat = feat / feat.norm(dim=-1, keepdim=True)
+    return feat[0].cpu().numpy().astype(np.float32)
+
+
 @app.post("/search")
-async def search(file: UploadFile = File(...), k: int = Form(8)):
+async def search(file: UploadFile = File(...), k: int = Form(8),
+                 alpha: float = Form(0.5)):
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(415, f"Unsupported file type: {file.content_type}")
     raw = await file.read(MAX_UPLOAD_BYTES + 1)
@@ -103,8 +142,14 @@ async def search(file: UploadFile = File(...), k: int = Form(8)):
         raise HTTPException(400, "Could not decode image")
 
     k = max(1, min(int(k), 50))
+    alpha = min(max(float(alpha), 0.0), 1.0)
     q = embed_image(img)
     scores = state["embeddings"] @ q  # cosine: both sides L2-normalized
+    # Blend with DINOv2 visual similarity when available: alpha=1 -> pure
+    # semantic (CLIP), alpha=0 -> pure visual structure (DINOv2).
+    if state.get("dino_embeddings") is not None and alpha < 1.0:
+        q_dino = embed_image_dino(img)
+        scores = alpha * scores + (1.0 - alpha) * (state["dino_embeddings"] @ q_dino)
     top = np.argsort(-scores)[:k]
     return {"results": [
         {

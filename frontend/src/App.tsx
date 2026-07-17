@@ -7,7 +7,8 @@ import { QueryPanel } from "@/components/QueryPanel"
 import { ResultsGrid, SkeletonGrid } from "@/components/ResultsGrid"
 import { ErrorState } from "@/components/ErrorState"
 import { EmptyResults } from "@/components/EmptyResults"
-import { searchByImage, SearchError } from "@/lib/api"
+import { BlendSlider } from "@/components/BlendSlider"
+import { fetchHealth, searchByImage, SearchError } from "@/lib/api"
 import type { SearchResult } from "@/lib/api"
 
 type Status = "idle" | "loading" | "success" | "error"
@@ -18,7 +19,22 @@ function App() {
   const [status, setStatus] = useState<Status>("idle")
   const [results, setResults] = useState<SearchResult[]>([])
   const [errorMessage, setErrorMessage] = useState("")
+  const [alpha, setAlpha] = useState(0.5)
+  const [blendAvailable, setBlendAvailable] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
+  const alphaRef = useRef(alpha)
+  alphaRef.current = alpha
+  const blendDebounceRef = useRef<number | undefined>(undefined)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchHealth().then((h) => {
+      if (!cancelled) setBlendAvailable(h.blend)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const runSearch = useCallback(async (target: File) => {
     abortRef.current?.abort()
@@ -28,7 +44,7 @@ function App() {
     setStatus("loading")
     setErrorMessage("")
     try {
-      const found = await searchByImage(target, 8, controller.signal)
+      const found = await searchByImage(target, 8, controller.signal, alphaRef.current)
       if (controller.signal.aborted) return
       setResults(found)
       setStatus("success")
@@ -71,6 +87,17 @@ function App() {
     if (file) void runSearch(file)
   }, [file, runSearch])
 
+  const handleAlphaChange = useCallback(
+    (next: number) => {
+      setAlpha(next)
+      window.clearTimeout(blendDebounceRef.current)
+      blendDebounceRef.current = window.setTimeout(() => {
+        if (file) void runSearch(file)
+      }, 350)
+    },
+    [file, runSearch],
+  )
+
   const previewUrlRef = useRef(previewUrl)
   previewUrlRef.current = previewUrl
 
@@ -96,6 +123,10 @@ function App() {
               resultCount={results.length}
               onReplace={handleReplace}
             />
+
+            {blendAvailable && (status === "success" || status === "loading") && (
+              <BlendSlider alpha={alpha} onChange={handleAlphaChange} />
+            )}
 
             {status === "loading" && <SkeletonGrid />}
 
