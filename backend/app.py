@@ -51,8 +51,10 @@ async def lifespan(app: FastAPI):
         MODEL_NAME, pretrained=PRETRAINED)
     model.eval()
     embeddings = np.load(DATA_DIR / "embeddings.npy")
-    metadata = [json.loads(l) for l in
-                (DATA_DIR / "metadata.jsonl").read_text().splitlines() if l.strip()]
+    # NB: iterate the file (splits on \n only) — .splitlines() also splits on
+    # U+2028/NEL etc., which occur *inside* JSON strings in museum titles.
+    with open(DATA_DIR / "metadata.jsonl", encoding="utf-8") as f:
+        metadata = [json.loads(l) for l in f if l.strip()]
     assert embeddings.shape[0] == len(metadata), "index artifacts misaligned"
 
     # Optional second score space: DINOv2 (visual/structural similarity),

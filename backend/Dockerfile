@@ -24,7 +24,9 @@ COPY app.py ingest.py ./
 # assets are updated.
 ARG INDEX_VERSION=dev
 ARG GH_TOKEN
-RUN echo "index version: ${INDEX_VERSION}" && GH_TOKEN="${GH_TOKEN}" python - <<'EOF'
+# ARG values are exported into RUN's environment automatically; never inline
+# ${GH_TOKEN} into the command line — it would be printed in build logs.
+RUN echo "index version: ${INDEX_VERSION}" && python - <<'EOF'
 import os
 import httpx
 
