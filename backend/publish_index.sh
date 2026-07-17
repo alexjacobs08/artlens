@@ -8,6 +8,16 @@ cd "$(dirname "$0")"
 N=$(wc -l < data/metadata.jsonl)
 echo "Publishing index with $N works"
 
+# Refuse to publish artifacts that would crash the backend at startup.
+.venv/bin/python - <<'PY'
+import json
+import numpy as np
+e = np.load("data/embeddings.npy", mmap_mode="r")
+rows = [json.loads(l) for l in open("data/metadata.jsonl")]
+assert e.shape[0] == len(rows), f"misaligned: {e.shape[0]} vs {len(rows)}"
+print(f"validated {len(rows)} rows")
+PY
+
 gh release view index --repo alexjacobs08/artlens >/dev/null 2>&1 || \
   gh release create index --repo alexjacobs08/artlens \
     --title "Search index artifacts" \
