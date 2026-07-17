@@ -21,12 +21,12 @@ export function ResultCard({ result, index }: ResultCardProps) {
       href={result.page_url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group animate-fade-up block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brass"
+      className="group mb-9 block break-inside-avoid animate-fade-up focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brass"
       style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-ink-raised">
+      <div className="relative overflow-hidden bg-ink-raised">
         {imageFailed ? (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-4 text-center">
+          <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 px-4 text-center">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="text-muted-2">
               <circle cx="11" cy="11" r="7.5" stroke="currentColor" strokeWidth="1.4" />
               <path d="M11 7.5v4M11 14.2v.1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
@@ -42,7 +42,7 @@ export function ResultCard({ result, index }: ResultCardProps) {
             loading="lazy"
             decoding="async"
             onError={() => setImageFailed(true)}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+            className="h-auto w-full transition-transform duration-500 ease-out group-hover:scale-[1.04]"
           />
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />

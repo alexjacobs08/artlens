@@ -1,7 +1,12 @@
-export function SkeletonCard({ delay = 0 }: { delay?: number }) {
+const HEIGHTS = ["aspect-[4/5]", "aspect-[3/4]", "aspect-square", "aspect-[5/6]"]
+
+export function SkeletonCard({ delay = 0, index = 0 }: { delay?: number; index?: number }) {
   return (
-    <div className="animate-fade-in" style={{ animationDelay: `${delay}ms` }}>
-      <div className="relative aspect-[4/5] overflow-hidden bg-ink-raised">
+    <div
+      className="mb-9 break-inside-avoid animate-fade-in"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className={`relative ${HEIGHTS[index % HEIGHTS.length]} overflow-hidden bg-ink-raised`}>
         <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-paper-hover/70 to-transparent" />
       </div>
       <div className="mt-3 space-y-2">

@@ -113,7 +113,10 @@ async def search(file: UploadFile = File(...), k: int = Form(8)):
             "artist": state["metadata"][i]["artist"],
             "date": state["metadata"][i]["date"],
             "page_url": state["metadata"][i]["page_url"],
-            "thumbnail_url": state["metadata"][i]["thumbnail_url"],
+            # Rows indexed before THUMB_WIDTH went 200->600 still carry 200px
+            # IIIF urls; upgrade at serve time so old artifacts render sharp.
+            "thumbnail_url": state["metadata"][i]["thumbnail_url"].replace(
+                "/full/200,/", "/full/600,/"),
             "source": state["metadata"][i].get("source", ""),
         }
         for i in top

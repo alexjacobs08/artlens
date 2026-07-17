@@ -76,7 +76,7 @@ class ArticSource:
     BASE = "https://api.artic.edu/api/v1/artworks"
     FIELDS = "id,title,artist_display,date_display,image_id,is_public_domain"
     INDEX_WIDTH = 843
-    THUMB_WIDTH = 200
+    THUMB_WIDTH = 600  # results grid renders cards ~300-400px wide on 2x displays
 
     def __init__(self, client: httpx.Client | None = None):
         self.client = client or httpx.Client(
