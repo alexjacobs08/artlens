@@ -23,26 +23,36 @@ export function Hero({ onSelect }: HeroProps) {
       ? `${Math.floor(indexed / 1000).toLocaleString()},000+ public-domain works`
       : "thousands of public-domain works"
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-10 px-6 py-16 text-center sm:py-24">
-      <div className="space-y-5 animate-fade-up">
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-muted-2">
-          Reverse image search · Open-access art
-        </p>
-        <h1 className="font-display text-5xl leading-[1.05] text-bone sm:text-6xl">
-          Art<span className="text-brass italic">Lens</span>
-        </h1>
-        <p className="mx-auto max-w-md text-balance text-base leading-relaxed text-muted">
-          Photograph a painting, print, or object and find its kindred works
-          among <span className="text-bone">{corpus}</span> from the
-          open-access collections of great museums.
-        </p>
-      </div>
-
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid" aria-hidden />
       <div
-        className="w-full animate-fade-up"
-        style={{ animationDelay: "120ms" }}
-      >
-        <Dropzone onSelect={onSelect} />
+        className="pointer-events-none absolute left-1/2 top-[-8rem] h-[26rem] w-[42rem] -translate-x-1/2 rounded-full bg-accent/25 blur-[110px] animate-glow-pulse"
+        aria-hidden
+      />
+
+      <div className="relative mx-auto flex w-full max-w-2xl flex-col items-center gap-10 px-6 py-20 text-center sm:py-28">
+        <div className="space-y-6 animate-fade-up">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            Reverse image search · Open-access art
+          </span>
+          <h1 className="font-display text-5xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
+            Art<span className="text-gradient">Lens</span>
+          </h1>
+          <p className="mx-auto max-w-md text-balance text-base leading-relaxed text-muted-foreground">
+            Upload a photo of a painting, print, or object and find its
+            kindred works among{" "}
+            <span className="text-foreground">{corpus}</span> from the
+            open-access collections of great museums.
+          </p>
+        </div>
+
+        <div
+          className="w-full animate-fade-up"
+          style={{ animationDelay: "120ms" }}
+        >
+          <Dropzone onSelect={onSelect} />
+        </div>
       </div>
     </div>
   )

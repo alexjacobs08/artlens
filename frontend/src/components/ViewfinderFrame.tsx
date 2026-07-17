@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils"
 
 interface ViewfinderFrameProps {
   className?: string
-  /** Tailwind color token for the bracket strokes, e.g. "stroke-brass" */
+  /** Tailwind color token for the bracket strokes, e.g. "stroke-accent" */
   colorClassName?: string
   /** Thickness in px */
   thickness?: number
@@ -17,7 +17,7 @@ interface ViewfinderFrameProps {
  */
 export function ViewfinderFrame({
   className,
-  colorClassName = "stroke-brass",
+  colorClassName = "stroke-accent",
   thickness = 2,
   size = 22,
 }: ViewfinderFrameProps) {
@@ -45,6 +45,7 @@ export function ViewfinderFrame({
           <path
             d="M1 9V1H9"
             strokeWidth={thickness}
+            strokeLinecap="round"
             className={colorClassName}
           />
         </svg>

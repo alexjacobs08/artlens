@@ -108,14 +108,14 @@ function App() {
   }, [])
 
   return (
-    <div className="flex min-h-svh flex-col bg-ink bg-noise">
+    <div className="flex min-h-svh flex-col bg-background">
       <Header />
 
       <main className="flex-1">
         {!file || !previewUrl ? (
           <Hero onSelect={handleSelect} />
         ) : (
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 sm:px-10">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 sm:px-10">
             <QueryPanel
               imageUrl={previewUrl}
               fileName={file.name}

@@ -1,13 +1,13 @@
 export function Footer() {
   return (
-    <footer className="border-t border-rule/60 px-6 py-8 sm:px-10">
-      <p className="max-w-2xl font-mono text-[11px] leading-relaxed text-muted-2">
+    <footer className="border-t border-border px-6 py-8 sm:px-10">
+      <p className="max-w-2xl text-[11px] leading-relaxed text-muted-foreground-2">
         Artwork images and data come from the open-access programs of the{" "}
         <a
           href="https://www.artic.edu/open-access"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-muted underline decoration-muted-2 underline-offset-2 hover:text-brass"
+          className="text-muted-foreground underline decoration-muted-foreground-2 underline-offset-2 hover:text-accent"
         >
           Art Institute of Chicago
         </a>
@@ -16,7 +16,7 @@ export function Footer() {
           href="https://www.clevelandart.org/open-access"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-muted underline decoration-muted-2 underline-offset-2 hover:text-brass"
+          className="text-muted-foreground underline decoration-muted-foreground-2 underline-offset-2 hover:text-accent"
         >
           Cleveland Museum of Art
         </a>
@@ -25,7 +25,7 @@ export function Footer() {
           href="https://www.metmuseum.org/about-the-met/policies-and-documents/open-access"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-muted underline decoration-muted-2 underline-offset-2 hover:text-brass"
+          className="text-muted-foreground underline decoration-muted-foreground-2 underline-offset-2 hover:text-accent"
         >
           The Met
         </a>{" "}
