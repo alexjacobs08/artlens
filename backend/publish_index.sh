@@ -25,7 +25,7 @@ gh release view index --repo alexjacobs08/artlens >/dev/null 2>&1 || \
 ASSETS=(data/embeddings.npy data/metadata.jsonl)
 if [ -f data/embeddings_dino.npy ]; then
   # Only ship the dino matrix when aligned with the CLIP one.
-  DINO_N=$(python3 - <<'PY'
+  DINO_N=$(.venv/bin/python - <<'PY'
 import numpy as np
 print(np.load("data/embeddings_dino.npy", mmap_mode="r").shape[0])
 PY
